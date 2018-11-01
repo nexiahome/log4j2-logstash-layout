@@ -2,6 +2,7 @@ package com.vlkan.log4j2.logstash.layout.resolver;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.vlkan.log4j2.logstash.layout.util.Streamable;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.message.Message;
@@ -54,6 +55,10 @@ class MessageResolver implements EventResolver {
     }
 
     private void resolveJson(Message message, JsonGenerator jsonGenerator) throws IOException {
+        if (message instanceof Streamable) {
+            ((Streamable) message).streamTo(jsonGenerator);
+            return;
+        }
 
         // Check message type.
         if (!(message instanceof MultiformatMessage)) {
