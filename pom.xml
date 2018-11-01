@@ -5,7 +5,7 @@
 
     <groupId>com.vlkan.log4j2</groupId>
     <artifactId>log4j2-logstash-layout-parent</artifactId>
-    <version>0.15-SNAPSHOT</version>
+    <version>0.15-nexia4</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -42,22 +42,22 @@
     </developers>
 
     <scm>
-        <url>http://github.com/vy/log4j2-logstash-layout</url>
-        <connection>scm:git:git@github.com:vy/log4j2-logstash-layout.git</connection>
-        <developerConnection>scm:git:git@github.com:vy/log4j2-logstash-layout.git</developerConnection>
+        <url>http://github.com/nexiahome/log4j2-logstash-layout</url>
+        <connection>scm:git:git@github.com:nexiahome/log4j2-logstash-layout.git</connection>
+        <developerConnection>scm:git:git@github.com:nexiahome/log4j2-logstash-layout.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
     <distributionManagement>
         <snapshotRepository>
-            <id>sonatype-nexus-snapshots</id>
-            <name>Sonatype Nexus snapshot repository</name>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <id>snapshots</id>
+            <name>artifactory.nexiabuild.com-snapshots</name>
+            <url>https://artifactory.nexiabuild.com/artifactory/libs-snapshot-local</url>
         </snapshotRepository>
         <repository>
-            <id>sonatype-nexus-staging</id>
-            <name>Sonatype Nexus release repository</name>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+            <id>central</id>
+            <name>artifactory.nexiabuild.com-releases</name>
+            <url>https://artifactory.nexiabuild.com/artifactory/libs-release-local</url>
         </repository>
     </distributionManagement>
 
@@ -69,8 +69,8 @@
 
         <!-- library versions -->
         <assertj-core.version>2.9.1</assertj-core.version><!-- Only AssertJ 2.X versions support Java 7! -->
-        <commons-lang3.version>3.8</commons-lang3.version>
-        <jackson.version>2.9.6</jackson.version>
+        <commons-lang3.version>3.8.1</commons-lang3.version>
+        <jackson.version>2.9.7</jackson.version>
         <jmh.version>1.21</jmh.version>
         <junit.version>4.12</junit.version>
         <log4j2.version>2.11.1</log4j2.version>
