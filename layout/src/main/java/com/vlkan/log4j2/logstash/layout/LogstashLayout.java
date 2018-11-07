@@ -17,6 +17,7 @@ import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderFactory;
 import org.apache.logging.log4j.core.config.plugins.PluginConfiguration;
+import org.apache.logging.log4j.core.layout.AbstractStringLayout;
 import org.apache.logging.log4j.core.layout.ByteBufferDestination;
 import org.apache.logging.log4j.core.layout.ByteBufferDestinationHelper;
 import org.apache.logging.log4j.core.lookup.StrSubstitutor;
@@ -36,13 +37,11 @@ import java.util.TimeZone;
         category = Node.CATEGORY,
         elementType = Layout.ELEMENT_TYPE,
         printObject = true)
-public class LogstashLayout implements Layout<String> {
+public class LogstashLayout extends AbstractStringLayout {
 
-    private static final Charset CHARSET = StandardCharsets.UTF_8;
+    private final String contentType = "application/json; charset=" + getCharset();
 
-    private static final String CONTENT_TYPE = "application/json; charset=" + CHARSET;
-
-    private static final byte[] EMPTY_OBJECT_JSON_BYTES = "{}".getBytes(CHARSET);
+    private final byte[] emptyObjectJsonBytes = "{}".getBytes(getCharset());
 
     private final TemplateResolver<LogEvent> eventResolver;
 
@@ -50,7 +49,9 @@ public class LogstashLayout implements Layout<String> {
 
     private final Supplier<LogstashLayoutSerializationContext> serializationContextSupplier;
 
-    private LogstashLayout(Builder builder) {
+    protected LogstashLayout(Builder builder) {
+
+        super(builder.getCharset());
 
         // Create StackTraceElement resolver.
         ObjectMapper objectMapper = new ObjectMapper();
@@ -86,7 +87,7 @@ public class LogstashLayout implements Layout<String> {
         this.eventResolver = TemplateResolvers.ofTemplate(resolverContext, eventTemplate);
 
         // Create the serialization context supplier.
-        this.lineSeparatorBytes = builder.lineSeparator.getBytes(CHARSET);
+        this.lineSeparatorBytes = builder.lineSeparator.getBytes(getCharset());
         this.serializationContextSupplier = LogstashLayoutSerializationContexts.createSupplier(
                 objectMapper,
                 builder.maxByteCount,
@@ -121,10 +122,11 @@ public class LogstashLayout implements Layout<String> {
         return FastDateFormat.getInstance(builder.dateTimeFormatPattern, timeZone);
     }
 
+    @Override
     public String toSerializable(LogEvent event) {
         try (LogstashLayoutSerializationContext context = serializationContextSupplier.get()) {
             encode(event, context);
-            return context.getOutputStream().toString(CHARSET);
+            return context.getOutputStream().toString(getCharset());
         } catch (Exception error) {
             throw new RuntimeException("failed serializing JSON", error);
         }
@@ -157,7 +159,7 @@ public class LogstashLayout implements Layout<String> {
         jsonGenerator.flush();
         ByteBufferOutputStream outputStream = context.getOutputStream();
         if (outputStream.getByteBuffer().position() == 0) {
-            outputStream.write(EMPTY_OBJECT_JSON_BYTES);
+            outputStream.write(emptyObjectJsonBytes);
         }
         outputStream.write(lineSeparatorBytes);
     }
@@ -173,13 +175,8 @@ public class LogstashLayout implements Layout<String> {
     }
 
     @Override
-    public byte[] toByteArray(LogEvent event) {
-        return null;
-    }
-
-    @Override
     public String getContentType() {
-        return CONTENT_TYPE;
+        return contentType;
     }
 
     @Override
@@ -188,13 +185,17 @@ public class LogstashLayout implements Layout<String> {
     }
 
     @PluginBuilderFactory
-    @SuppressWarnings("WeakerAccess")
-    public static Builder newBuilder() {
-        return new Builder();
+    public static <B extends Builder<B>> B newBuilder() {
+        return new Builder<B>().asBuilder();
     }
 
-    @SuppressWarnings({"unused", "WeakerAccess"})
-    public static class Builder implements org.apache.logging.log4j.core.util.Builder<LogstashLayout> {
+    public static class Builder<B extends Builder<B>> extends AbstractStringLayout.Builder<B>
+            implements org.apache.logging.log4j.core.util.Builder<LogstashLayout> {
+
+        public Builder() {
+            super();
+            setCharset(StandardCharsets.UTF_8);
+        }
 
         @PluginConfiguration
         private Configuration config;
@@ -241,143 +242,139 @@ public class LogstashLayout implements Layout<String> {
         @PluginBuilderAttribute
         private int maxByteCount = 1024 * 512;  // 512 KiB
 
-        private Builder() {
-            // Do nothing.
-        }
-
         public Configuration getConfiguration() {
             return config;
         }
 
-        public Builder setConfiguration(Configuration configuration) {
+        public B setConfiguration(Configuration configuration) {
             this.config = configuration;
-            return this;
+            return this.asBuilder();
         }
 
         public boolean isPrettyPrintEnabled() {
             return prettyPrintEnabled;
         }
 
-        public Builder setPrettyPrintEnabled(boolean prettyPrintEnabled) {
+        public B setPrettyPrintEnabled(boolean prettyPrintEnabled) {
             this.prettyPrintEnabled = prettyPrintEnabled;
-            return this;
+            return this.asBuilder();
         }
 
         public boolean isLocationInfoEnabled() {
             return locationInfoEnabled;
         }
 
-        public Builder setLocationInfoEnabled(boolean locationInfoEnabled) {
+        public B setLocationInfoEnabled(boolean locationInfoEnabled) {
             this.locationInfoEnabled = locationInfoEnabled;
-            return this;
+            return this.asBuilder();
         }
 
         public boolean isStackTraceEnabled() {
             return stackTraceEnabled;
         }
 
-        public Builder setStackTraceEnabled(boolean stackTraceEnabled) {
+        public B setStackTraceEnabled(boolean stackTraceEnabled) {
             this.stackTraceEnabled = stackTraceEnabled;
-            return this;
+            return this.asBuilder();
         }
 
         public boolean isEmptyPropertyExclusionEnabled() {
             return emptyPropertyExclusionEnabled;
         }
 
-        public Builder setEmptyPropertyExclusionEnabled(boolean emptyPropertyExclusionEnabled) {
+        public B setEmptyPropertyExclusionEnabled(boolean emptyPropertyExclusionEnabled) {
             this.emptyPropertyExclusionEnabled = emptyPropertyExclusionEnabled;
-            return this;
+            return this.asBuilder();
         }
 
         public String getDateTimeFormatPattern() {
             return dateTimeFormatPattern;
         }
 
-        public Builder setDateTimeFormatPattern(String dateTimeFormatPattern) {
+        public B setDateTimeFormatPattern(String dateTimeFormatPattern) {
             this.dateTimeFormatPattern = dateTimeFormatPattern;
-            return this;
+            return this.asBuilder();
         }
 
         public String getTimeZoneId() {
             return timeZoneId;
         }
 
-        public Builder setTimeZoneId(String timeZoneId) {
+        public B setTimeZoneId(String timeZoneId) {
             this.timeZoneId = timeZoneId;
-            return this;
+            return this.asBuilder();
         }
 
         public String getEventTemplate() {
             return eventTemplate;
         }
 
-        public Builder setEventTemplate(String eventTemplate) {
+        public B setEventTemplate(String eventTemplate) {
             this.eventTemplate = eventTemplate;
-            return this;
+            return this.asBuilder();
         }
 
         public String getEventTemplateUri() {
             return eventTemplateUri;
         }
 
-        public Builder setEventTemplateUri(String eventTemplateUri) {
+        public B setEventTemplateUri(String eventTemplateUri) {
             this.eventTemplateUri = eventTemplateUri;
-            return this;
+            return this.asBuilder();
         }
 
         public String getStackTraceElementTemplate() {
             return stackTraceElementTemplate;
         }
 
-        public Builder setStackTraceElementTemplate(String stackTraceElementTemplate) {
+        public B setStackTraceElementTemplate(String stackTraceElementTemplate) {
             this.stackTraceElementTemplate = stackTraceElementTemplate;
-            return this;
+            return this.asBuilder();
         }
 
         public String getStackTraceElementTemplateUri() {
             return stackTraceElementTemplateUri;
         }
 
-        public Builder setStackTraceElementTemplateUri(String stackTraceElementTemplateUri) {
+        public B setStackTraceElementTemplateUri(String stackTraceElementTemplateUri) {
             this.stackTraceElementTemplateUri = stackTraceElementTemplateUri;
-            return this;
+            return this.asBuilder();
         }
 
         public String getMdcKeyPattern() {
             return mdcKeyPattern;
         }
 
-        public Builder setMdcKeyPattern(String mdcKeyPattern) {
+        public B setMdcKeyPattern(String mdcKeyPattern) {
             this.mdcKeyPattern = mdcKeyPattern;
-            return this;
+            return this.asBuilder();
         }
 
         public String getNdcPattern() {
             return ndcPattern;
         }
 
-        public Builder setNdcPattern(String ndcPattern) {
+        public B setNdcPattern(String ndcPattern) {
             this.ndcPattern = ndcPattern;
-            return this;
+            return this.asBuilder();
         }
 
         public String getLineSeparator() {
             return lineSeparator;
         }
 
-        public Builder setLineSeparator(String lineSeparator) {
+        public B setLineSeparator(String lineSeparator) {
             this.lineSeparator = lineSeparator;
-            return this;
+            return this.asBuilder();
         }
 
         public int getMaxByteCount() {
             return maxByteCount;
         }
 
-        public Builder setMaxByteCount(int maxByteCount) {
+        public B setMaxByteCount(int maxByteCount) {
             this.maxByteCount = maxByteCount;
-            return this;
+            return this.asBuilder();
         }
 
         @Override
