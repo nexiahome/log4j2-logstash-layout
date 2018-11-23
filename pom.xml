@@ -42,22 +42,22 @@
     </developers>
 
     <scm>
-        <url>http://github.com/vy/log4j2-logstash-layout</url>
-        <connection>scm:git:git@github.com:vy/log4j2-logstash-layout.git</connection>
-        <developerConnection>scm:git:git@github.com:vy/log4j2-logstash-layout.git</developerConnection>
-        <tag>v0.18</tag>
+        <url>http://github.com/nexiahome/log4j2-logstash-layout</url>
+        <connection>scm:git:git@github.com:nexiahome/log4j2-logstash-layout.git</connection>
+        <developerConnection>scm:git:git@github.com:nexiahome/log4j2-logstash-layout.git</developerConnection>
+        <tag>HEAD</tag>
     </scm>
 
     <distributionManagement>
         <snapshotRepository>
-            <id>sonatype-nexus-snapshots</id>
-            <name>Sonatype Nexus snapshot repository</name>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <id>snapshots</id>
+            <name>artifactory.nexiabuild.com-snapshots</name>
+            <url>https://artifactory.nexiabuild.com/artifactory/libs-snapshot-local</url>
         </snapshotRepository>
         <repository>
-            <id>sonatype-nexus-staging</id>
-            <name>Sonatype Nexus release repository</name>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+            <id>central</id>
+            <name>artifactory.nexiabuild.com-releases</name>
+            <url>https://artifactory.nexiabuild.com/artifactory/libs-release-local</url>
         </repository>
     </distributionManagement>
 
