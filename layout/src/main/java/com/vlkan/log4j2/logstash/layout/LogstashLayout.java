@@ -8,12 +8,13 @@ import com.vlkan.log4j2.logstash.layout.resolver.TemplateResolver;
 import com.vlkan.log4j2.logstash.layout.resolver.TemplateResolvers;
 import com.vlkan.log4j2.logstash.layout.util.ByteBufferDestinations;
 import com.vlkan.log4j2.logstash.layout.util.ByteBufferOutputStream;
-import com.vlkan.log4j2.logstash.layout.util.Uris;
+import com.vlkan.log4j2.logstash.layout.util.JsonGenerators;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.core.Layout;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.ConfigurationSource;
 import org.apache.logging.log4j.core.config.Node;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderAttribute;
@@ -22,6 +23,7 @@ import org.apache.logging.log4j.core.config.plugins.PluginConfiguration;
 import org.apache.logging.log4j.core.layout.ByteBufferDestination;
 import org.apache.logging.log4j.core.lookup.StrSubstitutor;
 import org.apache.logging.log4j.core.util.datetime.FastDateFormat;
+import org.apache.logging.log4j.core.util.NetUtils;
 import org.apache.logging.log4j.util.Supplier;
 
 import java.io.IOException;
@@ -105,9 +107,16 @@ public class LogstashLayout implements Layout<String> {
     }
 
     private static String readTemplate(String template, String templateUri) {
-        return StringUtils.isBlank(template)
-                ? Uris.readUri(templateUri)
-                : template;
+        if (!StringUtils.isBlank(template)) {
+            return template;
+        }
+        try {
+            ConfigurationSource configSource = ConfigurationSource.fromUri(NetUtils.toURI(templateUri));
+            return new String(configSource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        } catch (Exception error) {
+            String message = String.format("failed reading URI (spec=%s)", templateUri);
+            throw new RuntimeException(message, error);
+        }
     }
 
     private static FastDateFormat readDateFormat(Builder builder) {
